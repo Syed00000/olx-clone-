@@ -5,8 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     // In browser environment
-    // Use the latest backend deployment URL that has our fixes
-    return 'https://backend-k8l1set2d-syed00000s-projects.vercel.app';
+    // Use the original backend domain that should have our fixes
+    return 'https://olxbackend-black.vercel.app';
   }
   // Server-side (not used in this app)
   return '';
