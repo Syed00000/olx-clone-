@@ -6,7 +6,7 @@ const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     // In browser environment
     // Use the latest backend deployment URL that has our fixes
-    return 'https://backend-ql2xb4v6g-syed00000s-projects.vercel.app';
+    return 'https://backend-hfyteif1f-syed00000s-projects.vercel.app';
   }
   // Server-side (not used in this app)
   return '';
