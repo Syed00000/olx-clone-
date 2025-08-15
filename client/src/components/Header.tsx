@@ -13,12 +13,11 @@ import { Search, MapPin, ChevronDown, Plus } from "lucide-react";
 import { categories } from "@/lib/categories";
 
 interface HeaderProps {
-  onSellClick: () => void;
   onSearch: (query: string) => void;
   onCategorySelect: (category: string) => void;
 }
 
-export default function Header({ onSellClick, onSearch, onCategorySelect }: HeaderProps) {
+export default function Header({ onSearch, onCategorySelect }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
@@ -84,13 +83,14 @@ export default function Header({ onSellClick, onSearch, onCategorySelect }: Head
               Login
             </Button>
             
-            <Button 
-              onClick={onSellClick}
-              className="bg-olx-accent text-olx-primary font-bold px-6 py-2 rounded-lg hover:bg-yellow-400 transition-colors"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              SELL
-            </Button>
+            <Link href="/post">
+              <Button 
+                className="bg-olx-accent text-olx-primary font-bold px-6 py-2 rounded-lg hover:bg-yellow-400 transition-colors"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                SELL
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

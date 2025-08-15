@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
-import PostModal from "@/components/PostModal";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Listing } from "@shared/schema";
 
 export default function HomePage() {
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
@@ -28,7 +27,6 @@ export default function HomePage() {
   return (
     <div className="bg-gray-50 min-h-screen">
       <Header 
-        onSellClick={() => setIsPostModalOpen(true)}
         onSearch={setSearchQuery}
         onCategorySelect={setSelectedCategory}
       />
@@ -89,12 +87,13 @@ export default function HomePage() {
                 <p className="text-blue-100 text-sm mb-4">
                   Make some extra cash by selling things in your community. Go on, it's quick and easy.
                 </p>
-                <Button 
-                  onClick={() => setIsPostModalOpen(true)}
-                  className="bg-white text-blue-500 font-bold px-6 py-2 rounded-lg hover:bg-gray-100"
-                >
-                  Start Selling
-                </Button>
+                <Link href="/post">
+                  <Button 
+                    className="bg-white text-blue-500 font-bold px-6 py-2 rounded-lg hover:bg-gray-100"
+                  >
+                    Start Selling
+                  </Button>
+                </Link>
               </div>
             </div>
           )}
@@ -155,10 +154,6 @@ export default function HomePage() {
         </div>
       </footer>
 
-      <PostModal 
-        isOpen={isPostModalOpen} 
-        onClose={() => setIsPostModalOpen(false)} 
-      />
     </div>
   );
 }

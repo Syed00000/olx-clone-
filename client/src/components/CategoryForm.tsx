@@ -22,6 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import ImageUpload from "./ImageUpload";
+import { getCategoryById } from "@/lib/categories";
 import type { InsertListing } from "@shared/schema";
 
 interface CategoryFormProps {
@@ -34,7 +35,7 @@ interface CategoryFormProps {
 // Dynamic form schema based on category
 const createFormSchema = (category: string) => {
   const baseSchema = {
-    title: z.string().min(1, "Title is required"),
+    title: z.string().min(1, "Ad title is required"),
     description: z.string().min(1, "Description is required"),
     price: z.number().min(1, "Price must be greater than 0"),
     location: z.string().min(1, "Location is required"),
@@ -55,10 +56,10 @@ const createFormSchema = (category: string) => {
   if (category === "jobs") {
     return z.object({
       ...baseSchema,
-      company: z.string().min(1, "Company name is required"),
-      jobType: z.string().min(1, "Job type is required"),
-      experience: z.string().min(1, "Experience is required"),
-      salaryRange: z.string().min(1, "Salary range is required"),
+      salaryPeriod: z.string().min(1, "Salary period is required"),
+      positionType: z.string().min(1, "Position type is required"),
+      salaryFrom: z.number().min(0, "Salary from is required"),
+      salaryTo: z.number().min(0, "Salary to is required"),
     });
   }
 
@@ -78,6 +79,7 @@ const createFormSchema = (category: string) => {
 
 export default function CategoryForm({ category, subcategory, onSubmit, isSubmitting }: CategoryFormProps) {
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [currentStep, setCurrentStep] = useState<"details" | "photos" | "location">("details");
   
   const formSchema = createFormSchema(category);
   const form = useForm({
@@ -90,6 +92,9 @@ export default function CategoryForm({ category, subcategory, onSubmit, isSubmit
       images: [],
     },
   });
+
+  const categoryData = getCategoryById(category);
+  const subcategoryData = categoryData?.subcategories?.find(sub => sub.id === subcategory);
 
   const handleSubmit = (data: any) => {
     const listingData: InsertListing = {
@@ -113,11 +118,13 @@ export default function CategoryForm({ category, subcategory, onSubmit, isSubmit
       };
     } else if (category === "jobs") {
       listingData.attributes = {
-        company: data.company,
-        jobType: data.jobType,
-        experience: data.experience,
-        salaryRange: data.salaryRange,
+        salaryPeriod: data.salaryPeriod,
+        positionType: data.positionType,
+        salaryFrom: data.salaryFrom,
+        salaryTo: data.salaryTo,
       };
+      // For jobs, price is the average salary
+      listingData.price = Math.round((data.salaryFrom + data.salaryTo) / 2);
     } else if (category === "mobiles") {
       listingData.attributes = {
         brand: data.brand,
@@ -130,88 +137,263 @@ export default function CategoryForm({ category, subcategory, onSubmit, isSubmit
     onSubmit(listingData);
   };
 
-  const renderCategorySpecificFields = () => {
-    if (category === "cars") {
-      return (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              control={form.control}
-              name="brand"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Brand *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Brand" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="maruti-suzuki">Maruti Suzuki</SelectItem>
-                      <SelectItem value="hyundai">Hyundai</SelectItem>
-                      <SelectItem value="tata">Tata</SelectItem>
-                      <SelectItem value="mahindra">Mahindra</SelectItem>
-                      <SelectItem value="honda">Honda</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+  const renderJobsForm = () => (
+    <div className="space-y-6">
+      {/* Selected Category */}
+      <div className="bg-white border rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">SELECTED CATEGORY</h3>
+        <div className="flex items-center justify-between">
+          <span className="text-gray-600">
+            {categoryData?.name} / {subcategoryData?.name || "General"}
+          </span>
+          <Button variant="link" className="text-olx-primary p-0">
+            Change
+          </Button>
+        </div>
+      </div>
 
+      {/* Include Some Details */}
+      <div className="bg-white border rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">INCLUDE SOME DETAILS</h3>
+        
+        <div className="space-y-6">
+          {/* Salary Period */}
+          <div>
+            <Label className="text-sm font-medium text-gray-700 mb-3 block">Salary period *</Label>
             <FormField
               control={form.control}
-              name="model"
+              name="salaryPeriod"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Model *</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Swift Dzire" {...field} />
+                    <div className="flex flex-wrap gap-4">
+                      {["Hourly", "Monthly", "Weekly", "Yearly"].map((period) => (
+                        <Button
+                          key={period}
+                          type="button"
+                          variant={field.value === period.toLowerCase() ? "default" : "outline"}
+                          onClick={() => field.onChange(period.toLowerCase())}
+                          className="px-4 py-2"
+                        >
+                          {period}
+                        </Button>
+                      ))}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
 
+          {/* Position Type */}
+          <div>
+            <Label className="text-sm font-medium text-gray-700 mb-3 block">Position type *</Label>
             <FormField
               control={form.control}
-              name="year"
+              name="positionType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Year *</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="e.g. 2020" 
-                      {...field} 
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    <div className="flex flex-wrap gap-4">
+                      {["Contract", "Full-time", "Part-time", "Temporary"].map((type) => (
+                        <Button
+                          key={type}
+                          type="button"
+                          variant={field.value === type.toLowerCase().replace("-", "") ? "default" : "outline"}
+                          onClick={() => field.onChange(type.toLowerCase().replace("-", ""))}
+                          className="px-4 py-2"
+                        >
+                          {type}
+                        </Button>
+                      ))}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Salary Range */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Salary from</Label>
+              <FormField
+                control={form.control}
+                name="salaryFrom"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        className="mt-1"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Salary to</Label>
+              <FormField
+                control={form.control}
+                name="salaryTo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        className="mt-1"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Ad Title */}
+          <div>
+            <Label className="text-sm font-medium text-gray-700">Ad title *</Label>
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      placeholder="Mention the key features of your item (e.g. brand, model, age, type)"
+                      {...field}
+                      className="mt-1"
+                      maxLength={70}
                     />
                   </FormControl>
+                  <div className="text-xs text-gray-500 text-right mt-1">0 / 70</div>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
 
+          {/* Description */}
+          <div>
+            <Label className="text-sm font-medium text-gray-700">Description *</Label>
             <FormField
               control={form.control}
-              name="fuelType"
+              name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Fuel Type *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Fuel Type" />
+                  <FormControl>
+                    <Textarea
+                      placeholder="Include condition, features and reason for selling"
+                      {...field}
+                      rows={4}
+                      className="mt-1 resize-none"
+                      maxLength={4096}
+                    />
+                  </FormControl>
+                  <div className="text-xs text-gray-500 text-right mt-1">0 / 4096</div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Photo Upload */}
+      <ImageUpload 
+        onImagesChange={setUploadedImages}
+        maxImages={12}
+      />
+
+      {/* Location */}
+      <div className="bg-white border rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">CONFIRM YOUR LOCATION</h3>
+        <div className="space-y-4">
+          <div className="flex border-b">
+            <Button variant="ghost" className="border-b-2 border-olx-primary">LIST</Button>
+            <Button variant="ghost" className="ml-4">CURRENT LOCATION</Button>
+          </div>
+          <div>
+            <Label className="text-sm font-medium text-gray-700">State *</Label>
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Select onValueChange={field.onChange}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select State" />
                       </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="petrol">Petrol</SelectItem>
-                      <SelectItem value="diesel">Diesel</SelectItem>
-                      <SelectItem value="cng">CNG</SelectItem>
-                      <SelectItem value="electric">Electric</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      <SelectContent>
+                        <SelectItem value="maharashtra">Maharashtra</SelectItem>
+                        <SelectItem value="delhi">Delhi</SelectItem>
+                        <SelectItem value="karnataka">Karnataka</SelectItem>
+                        <SelectItem value="gujarat">Gujarat</SelectItem>
+                        <SelectItem value="rajasthan">Rajasthan</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Submit Button */}
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          disabled={isSubmitting || uploadedImages.length === 0}
+          className="bg-olx-accent text-olx-primary font-bold px-8 py-3 rounded-lg hover:bg-yellow-400"
+        >
+          {isSubmitting ? "Posting..." : "Post now"}
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderDefaultForm = () => (
+    <div className="space-y-6">
+      <div className="bg-white border rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">SELECTED CATEGORY</h3>
+        <div className="flex items-center justify-between">
+          <span className="text-gray-600">
+            {categoryData?.name} / {subcategoryData?.name || "General"}
+          </span>
+          <Button variant="link" className="text-olx-primary p-0">
+            Change
+          </Button>
+        </div>
+      </div>
+
+      <div className="bg-white border rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">INCLUDE SOME DETAILS</h3>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter title" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -219,16 +401,16 @@ export default function CategoryForm({ category, subcategory, onSubmit, isSubmit
 
             <FormField
               control={form.control}
-              name="kmDriven"
+              name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>KM Driven *</FormLabel>
+                  <FormLabel>Price (₹) *</FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
-                      placeholder="e.g. 50000" 
+                      placeholder="Enter price" 
                       {...field} 
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -236,285 +418,62 @@ export default function CategoryForm({ category, subcategory, onSubmit, isSubmit
               )}
             />
           </div>
-        </>
-      );
-    }
 
-    if (category === "jobs") {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
-            name="company"
+            name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Company Name *</FormLabel>
+                <FormLabel>Description *</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. ABC Technologies" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="salaryRange"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Salary *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select salary range" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="8000-15000">₹ 8,000 - ₹ 15,000</SelectItem>
-                    <SelectItem value="15000-25000">₹ 15,000 - ₹ 25,000</SelectItem>
-                    <SelectItem value="25000-50000">₹ 25,000 - ₹ 50,000</SelectItem>
-                    <SelectItem value="50000+">₹ 50,000+</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="experience"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Experience *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select experience" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="fresher">Fresher</SelectItem>
-                    <SelectItem value="1-2">1-2 years</SelectItem>
-                    <SelectItem value="3-5">3-5 years</SelectItem>
-                    <SelectItem value="5+">5+ years</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="jobType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Job Type *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select job type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="full-time">Full Time</SelectItem>
-                    <SelectItem value="part-time">Part Time</SelectItem>
-                    <SelectItem value="contract">Contract</SelectItem>
-                    <SelectItem value="freelance">Freelance</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      );
-    }
-
-    if (category === "mobiles") {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="brand"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Brand *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Brand" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="apple">Apple</SelectItem>
-                    <SelectItem value="samsung">Samsung</SelectItem>
-                    <SelectItem value="vivo">Vivo</SelectItem>
-                    <SelectItem value="oppo">Oppo</SelectItem>
-                    <SelectItem value="xiaomi">Xiaomi</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="model"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Model *</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. iPhone 15" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="condition"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Condition *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Condition" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="like-new">Like New</SelectItem>
-                    <SelectItem value="good">Good</SelectItem>
-                    <SelectItem value="fair">Fair</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="warranty"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Warranty</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. 6 months" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      );
-    }
-
-    return null;
-  };
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* Basic Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Title *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter title" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Price (₹) *</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="Enter price" 
+                  <Textarea 
+                    rows={5} 
+                    placeholder="Describe your item in detail..." 
                     {...field} 
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
 
-        {/* Category Specific Fields */}
-        {renderCategorySpecificFields()}
-
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location *</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Mumbai, Maharashtra" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description *</FormLabel>
-              <FormControl>
-                <Textarea 
-                  rows={5} 
-                  placeholder="Describe your item in detail..." 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Image Upload */}
-        <div>
-          <Label className="text-sm font-medium">Add Photos *</Label>
-          <ImageUpload 
-            onImagesChange={setUploadedImages}
-            maxImages={12}
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location *</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Mumbai, Maharashtra" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {uploadedImages.length === 0 && (
-            <p className="text-sm text-red-500 mt-1">At least one image is required</p>
-          )}
         </div>
+      </div>
 
-        {/* Form Actions */}
-        <div className="flex justify-end pt-6 border-t">
-          <Button 
-            type="submit" 
-            disabled={isSubmitting || uploadedImages.length === 0}
-            className="px-8 py-3 bg-olx-accent text-olx-primary font-bold rounded-lg hover:bg-yellow-400"
-          >
-            {isSubmitting ? "Posting..." : "Post now"}
-          </Button>
-        </div>
+      <ImageUpload 
+        onImagesChange={setUploadedImages}
+        maxImages={12}
+      />
+
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          disabled={isSubmitting || uploadedImages.length === 0}
+          className="bg-olx-accent text-olx-primary font-bold px-8 py-3 rounded-lg hover:bg-yellow-400"
+        >
+          {isSubmitting ? "Posting..." : "Post now"}
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
+        {category === "jobs" ? renderJobsForm() : renderDefaultForm()}
       </form>
     </Form>
   );

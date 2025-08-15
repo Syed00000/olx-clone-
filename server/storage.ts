@@ -177,6 +177,9 @@ export class MemStorage implements IStorage {
     const listing: Listing = {
       ...insertListing,
       id,
+      subcategory: insertListing.subcategory || null,
+      images: insertListing.images || [],
+      attributes: insertListing.attributes || {},
       createdAt: now,
       updatedAt: now,
     };
@@ -191,6 +194,9 @@ export class MemStorage implements IStorage {
     const updatedListing: Listing = {
       ...listing,
       ...updateData,
+      subcategory: updateData.subcategory || listing.subcategory,
+      images: updateData.images || listing.images,
+      attributes: updateData.attributes || listing.attributes,
       updatedAt: new Date(),
     };
     
