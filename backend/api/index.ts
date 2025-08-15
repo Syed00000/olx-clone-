@@ -24,9 +24,23 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
+// Middleware to verify JWT token
+const authenticateToken = (token: string) => {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    return { success: true, decoded };
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Parse the URL to get just the pathname
+  const url = new URL(req.url || '/', `http://${req.headers.host}`);
+  const pathname = url.pathname;
+  
   // Health check endpoint
-  if (req.method === 'GET' && req.url === '/health') {
+  if (req.method === 'GET' && pathname === '/health') {
     return res.status(200).json({ 
       status: 'OK', 
       message: 'Vercel API handler is working',
@@ -46,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   // Auth login endpoint
-  if (req.method === 'POST' && req.url === '/api/auth/login') {
+  if (req.method === 'POST' && pathname === '/api/auth/login') {
     try {
       const { email, password } = req.body;
       
@@ -77,12 +91,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       });
     } catch (error: any) {
+      console.error('Login error:', error);
       return res.status(500).json({ message: 'Server error', error: error.message });
     }
   }
   
   // Auth register endpoint
-  if (req.method === 'POST' && req.url === '/api/auth/register') {
+  if (req.method === 'POST' && pathname === '/api/auth/register') {
     try {
       const { username, email, password, phone, location } = req.body;
       
@@ -126,6 +141,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       });
     } catch (error: any) {
+      console.error('Registration error:', error);
+      return res.status(500).json({ message: 'Server error', error: error.message });
+    }
+  }
+  
+  // Get current user endpoint
+  if (req.method === 'GET' && pathname === '/api/auth/me') {
+    try {
+      // Extract token from Authorization header
+      const authHeader = req.headers.authorization;
+      const token = authHeader && authHeader.split(' ')[1];
+      
+      if (!token) {
+        return res.status(401).json({ message: 'Access token required' });
+      }
+      
+      // Verify token
+      const verification = authenticateToken(token);
+      if (!verification.success) {
+        return res.status(403).json({ message: 'Invalid token' });
+      }
+      
+      // Find user by ID
+      const user = await User.findById(verification.decoded.userId);
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      
+      return res.status(200).json({
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        location: user.location
+      });
+    } catch (error: any) {
+      console.error('Get user error:', error);
       return res.status(500).json({ message: 'Server error', error: error.message });
     }
   }
