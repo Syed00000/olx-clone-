@@ -2,9 +2,21 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import mongoose from 'mongoose';
 
-// Use CommonJS require for bcrypt and jwt to avoid ES module issues in Vercel
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+// Use dynamic imports for bcrypt and jwt to avoid ES module issues in Vercel
+let bcrypt: any;
+let jwt: any;
+
+// Initialize bcrypt and jwt
+(async () => {
+  try {
+    const bcryptModule = await import('bcryptjs');
+    const jwtModule = await import('jsonwebtoken');
+    bcrypt = bcryptModule.default || bcryptModule;
+    jwt = jwtModule.default || jwtModule;
+  } catch (error) {
+    console.error('Failed to import bcrypt or jwt:', error);
+  }
+})();
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://syedimranh59:Syed%401234@cluster0.dmgn230.mongodb.net/olx-clone?retryWrites=true&w=majority';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
