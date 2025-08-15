@@ -1,6 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+// Determine the base API URL based on the environment
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    // In browser environment
+    if (import.meta.env.VITE_NODE_ENV === 'production') {
+      return import.meta.env.VITE_API_URL || '';
+    }
+    // Development environment - use relative URLs with proxy
+    return '';
+  }
+  // Server-side (not used in this app)
+  return '';
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
 interface User {
   id: string;
   username: string;
@@ -56,7 +72,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     queryKey: ['currentUser'],
     queryFn: async () => {
       if (!token) throw new Error('No token');
-      const response = await fetch('/api/auth/me', {
+      const url = API_BASE_URL ? `${API_BASE_URL}/api/auth/me` : '/api/auth/me';
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -71,7 +88,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const response = await fetch('/api/auth/login', {
+      const url = API_BASE_URL ? `${API_BASE_URL}/api/auth/login` : '/api/auth/login';
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Register mutation
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
-      const response = await fetch('/api/auth/register', {
+      const url = API_BASE_URL ? `${API_BASE_URL}/api/auth/register` : '/api/auth/register';
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

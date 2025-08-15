@@ -1,5 +1,23 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Add proper typing for environment variables
+interface ImportMetaEnv {
+  readonly VITE_NODE_ENV: string;
+  readonly VITE_API_URL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
+// Get environment variables
+const { VITE_NODE_ENV, VITE_API_URL } = (import.meta as ImportMeta).env;
+
+// Determine the base API URL based on the environment
+const API_BASE_URL = typeof window !== 'undefined' && VITE_NODE_ENV === 'production' 
+  ? VITE_API_URL 
+  : '';
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -12,7 +30,10 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Construct full URL for production, or use relative URL for development
+  const fullUrl = API_BASE_URL ? `${API_BASE_URL}${url}` : url;
+  
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -29,7 +50,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const url = queryKey.join("/") as string;
+    const fullUrl = API_BASE_URL ? `${API_BASE_URL}/${url}` : `/${url}`;
+    
+    const res = await fetch(fullUrl, {
       credentials: "include",
     });
 
