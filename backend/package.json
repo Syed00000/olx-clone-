@@ -1,7 +1,6 @@
 {
   "name": "olx-clone-backend",
   "version": "1.0.0",
-  "type": "module",
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx index.ts",

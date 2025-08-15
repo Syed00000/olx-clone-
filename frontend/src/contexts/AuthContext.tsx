@@ -5,13 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     // In browser environment
-    // Check if we're on the production domain
-    if (window.location.hostname === 'frontend-chi-steel-16.vercel.app') {
-      // Use the deployed backend URL for production
-      return 'https://olxbackend-black.vercel.app';
-    }
-    // Development environment - use relative URLs with proxy
-    return '';
+    // Always use the backend URL directly for production
+    return 'https://olxbackend-black.vercel.app';
   }
   // Server-side (not used in this app)
   return '';

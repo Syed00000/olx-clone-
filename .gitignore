@@ -151,3 +151,5 @@ attached_assets/
 client/
 server/
 shared/
+
+.vercel

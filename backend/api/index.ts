@@ -1,8 +1,10 @@
 // Updated Vercel API handler for OLX Clone backend with authentication
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import mongoose from 'mongoose';
-import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken';
+
+// Use CommonJS require for bcrypt and jwt to avoid ES module issues in Vercel
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://syedimranh59:Syed%401234@cluster0.dmgn230.mongodb.net/olx-clone?retryWrites=true&w=majority';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
