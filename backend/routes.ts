@@ -189,8 +189,8 @@ async function initializeCategories() {
   }
 }
 
-export async function registerRoutes(app: express.Express): Promise<Server> {
-  // Initialize database connection
+export const registerRoutes = async (app: express.Application) => {
+  // Connect to database
   await connectDB();
 
   // Serve uploaded images
@@ -601,6 +601,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
 
-  const httpServer = createServer(app);
-  return httpServer;
+  // At the end of the function, just return the app without creating an HTTP server
+  // This makes it compatible with both standard deployment and Vercel
+  return app;
 }

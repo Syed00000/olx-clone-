@@ -268,6 +268,34 @@ The application will start on `http://localhost:5000`
 
 The application is now fully functional and ready to use. Simply run `npm run dev` and visit `http://localhost:5000` to see the complete OLX clone in action!
 
+## ☁️ Deployment
+
+### Vercel Deployment (Recommended)
+
+This application can be deployed to Vercel with separate projects for frontend and backend:
+
+1. **Deploy the Backend**:
+   - Create a new project in Vercel
+   - Point it to your repository
+   - Set the environment variables (see [VERCEL_DEPLOYMENT.md](file:///C:/Users/Syed%20Imran%20Hassan/Downloads/OLXClone/OLXClone/VERCEL_DEPLOYMENT.md) for details)
+   - Configure the project to use the root directory
+
+2. **Deploy the Frontend**:
+   - Create another project in Vercel
+   - Point it to your repository
+   - Set the root directory to `frontend`
+   - Update the `VITE_API_URL` environment variable to your deployed backend URL
+
+For detailed instructions, see [VERCEL_DEPLOYMENT.md](file:///C:/Users/Syed%20Imran%20Hassan/Downloads/OLXClone/OLXClone/VERCEL_DEPLOYMENT.md) and [DEPLOYMENT.md](file:///C:/Users/Syed%20Imran%20Hassan/Downloads/OLXClone/OLXClone/DEPLOYMENT.md).
+
+### Environment Variables
+
+Make sure to set all required environment variables in your deployment platform:
+- `MONGODB_URI`: Your MongoDB connection string
+- `JWT_SECRET`: A secure secret for JWT token generation
+- `SESSION_SECRET`: A secure secret for session management
+- `FRONTEND_URL`: Your frontend URL for CORS configuration
+
 ## 🔮 Future Enhancements
 
 - Real-time chat system

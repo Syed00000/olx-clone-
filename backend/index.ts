@@ -52,7 +52,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 (async () => {
   try {
     // Register all API routes
-    const server = await registerRoutes(app);
+    await registerRoutes(app);
     
     // Health check route
     app.get('/health', (req, res) => {
@@ -61,7 +61,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 
     const port = parseInt(process.env.PORT || '5000', 10);
     
-    server.listen(port, () => {
+    app.listen(port, () => {
       console.log(`🚀 Backend server running on http://localhost:${port}`);
       console.log(`📊 Health check: http://localhost:${port}/health`);
     });
