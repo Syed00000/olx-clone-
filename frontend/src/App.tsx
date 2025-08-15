@@ -16,8 +16,8 @@ import TestPage from "@/pages/TestPage";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={TestPage} />
-      <Route path="/home" component={HomePage} />
+      <Route path="/" component={HomePage} />
+      <Route path="/test" component={TestPage} />
       <Route path="/listing/:id" component={ProductDetailPage} />
       <Route path="/post" component={PostAdPage} />
       <Route path="/dashboard" component={UserDashboard} />

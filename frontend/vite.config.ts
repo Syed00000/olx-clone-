@@ -8,7 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@shared/schema": path.resolve(import.meta.dirname, "src/shared/schema.ts"),
+      "@shared/schema": path.resolve(import.meta.dirname, "../backend/shared/schema.ts"),
     },
   },
   build: {
