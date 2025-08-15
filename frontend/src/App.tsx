@@ -11,11 +11,13 @@ import PostAdPage from "@/pages/PostAdPage";
 import UserDashboard from "@/pages/UserDashboard";
 import CategoryPage from "@/pages/CategoryPage";
 import EditAdPage from "@/pages/EditAdPage";
+import TestPage from "@/pages/TestPage";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={HomePage} />
+      <Route path="/" component={TestPage} />
+      <Route path="/home" component={HomePage} />
       <Route path="/listing/:id" component={ProductDetailPage} />
       <Route path="/post" component={PostAdPage} />
       <Route path="/dashboard" component={UserDashboard} />
