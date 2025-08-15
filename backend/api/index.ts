@@ -1,10 +1,28 @@
 // Updated Vercel API handler for OLX Clone backend with authentication
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { User } from '../shared/mongodb-schema';
-import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://syedimranh59:Syed%401234@cluster0.dmgn230.mongodb.net/olx-clone?retryWrites=true&w=majority';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
+
+// Define user schema and model directly to avoid import issues
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  phone: { type: String },
+  location: {
+    city: { type: String },
+    state: { type: String },
+    country: { type: String },
+  },
+  avatar: { type: String },
+  isVerified: { type: Boolean, default: false },
+}, { timestamps: true });
+
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Health check endpoint
@@ -14,6 +32,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: 'Vercel API handler is working',
       timestamp: new Date().toISOString() 
     });
+  }
+  
+  // Connect to MongoDB if not already connected
+  if (mongoose.connection.readyState !== 1) {
+    try {
+      await mongoose.connect(MONGODB_URI);
+      console.log('Connected to MongoDB');
+    } catch (error) {
+      console.error('Failed to connect to MongoDB:', error);
+      return res.status(500).json({ message: 'Database connection failed' });
+    }
   }
   
   // Auth login endpoint
