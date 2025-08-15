@@ -1,4 +1,5 @@
-import express, { type Request, Response } from "express";
+import * as express from "express";
+import { type Request, Response } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import connectDB from "./database";
