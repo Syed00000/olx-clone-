@@ -1,13 +1,13 @@
-import * as express from "express";
+import express from "express";
 import { type Request, Response } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import connectDB from "./database";
 import { User, Listing, Message, Category } from "./shared/mongodb-schema";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import path from "path";
-import fs from "fs";
+import * as bcrypt from "bcryptjs";
+import * as jwt from "jsonwebtoken";
+import * as path from "path";
+import * as fs from "fs";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-jwt-secret-key";
 

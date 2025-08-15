@@ -19,7 +19,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./frontend/src/*"],
-      "@shared/schema": ["./backend/shared/schema.ts"]
+      "@shared/schema": ["./frontend/src/shared/schema.ts"],
+      "@backend/shared/schema": ["./backend/shared/schema.ts"]
     }
   },
   "include": ["frontend/src", "backend"],
