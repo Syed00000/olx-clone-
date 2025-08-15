@@ -59,6 +59,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   // Log request for debugging
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log('Request headers:', req.headers);
+  console.log('Request body:', req.body);
   
   // Parse the URL to get just the pathname
   let pathname = '/';
@@ -103,13 +105,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   // Auth login endpoint
-  if (req.method === 'POST' && pathname === '/api/auth/login') {
-    try {
+  if (pathname === '/api/auth/login') {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ 
+        message: 'Method not allowed',
+        allowedMethods: ['POST'],
+        receivedMethod: req.method,
+        pathname: pathname
+      });
+    }
+    
+        try {
       console.log('Login request body:', req.body);
-      const { email, password } = req.body;
+      console.log('Request body type:', typeof req.body);
+      
+      // Ensure req.body is an object
+      let body = req.body;
+      if (typeof body === 'string') {
+        try {
+          body = JSON.parse(body);
+        } catch (parseError) {
+          console.error('Failed to parse request body:', parseError);
+          return res.status(400).json({ message: 'Invalid JSON in request body' });
+        }
+      }
+      
+      const { email, password } = body;
       
       // Validate input
       if (!email || !password) {
+        console.log('Missing email or password:', { email: !!email, password: !!password });
         return res.status(400).json({ message: 'Email and password are required' });
       }
       
@@ -150,8 +175,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   // Auth register endpoint
-  if (req.method === 'POST' && pathname === '/api/auth/register') {
-    try {
+  if (pathname === '/api/auth/register') {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ 
+        message: 'Method not allowed',
+        allowedMethods: ['POST'],
+        receivedMethod: req.method,
+        pathname: pathname
+      });
+    }
+    
+        try {
       const { username, email, password, phone, location } = req.body;
       
       // Validate input
@@ -207,8 +241,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   // Get current user endpoint
-  if (req.method === 'GET' && pathname === '/api/auth/me') {
-    try {
+  if (pathname === '/api/auth/me') {
+    if (req.method !== 'GET') {
+      return res.status(405).json({ 
+        message: 'Method not allowed',
+        allowedMethods: ['GET'],
+        receivedMethod: req.method,
+        pathname: pathname
+      });
+    }
+    
+        try {
       // Extract token from Authorization header
       const authHeader = req.headers.authorization;
       const token = authHeader && authHeader.split(' ')[1];
@@ -241,8 +284,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   // For all other requests, return a simple message
+  if (pathname.startsWith('/api/')) {
+    // API endpoints that don't match any route
+    return res.status(404).json({ 
+      message: 'API endpoint not found',
+      pathname: pathname,
+      method: req.method,
+      availableEndpoints: [
+        'POST /api/auth/login',
+        'POST /api/auth/register', 
+        'GET /api/auth/me'
+      ]
+    });
+  }
+  
+  // Root and other non-API requests
   return res.status(200).json({ 
     message: 'OLX Clone Backend API - Vercel Deployment',
-    note: 'Backend is deployed successfully'
+    note: 'Backend is deployed successfully',
+    availableEndpoints: [
+      'POST /api/auth/login',
+      'POST /api/auth/register',
+      'GET /api/auth/me',
+      'GET /health',
+      'GET /test'
+    ]
   });
 }

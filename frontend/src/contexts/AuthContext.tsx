@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     // In browser environment
-    if (import.meta.env.VITE_NODE_ENV === 'production') {
+    // Check if we're on the production domain
+    if (window.location.hostname === 'frontend-chi-steel-16.vercel.app') {
       // Use the deployed backend URL for production
       return 'https://olxbackend-black.vercel.app';
     }
@@ -17,6 +18,12 @@ const getApiBaseUrl = () => {
 };
 
 const API_BASE_URL = getApiBaseUrl();
+
+// Debug logging
+if (typeof window !== 'undefined') {
+  console.log('Current hostname:', window.location.hostname);
+  console.log('API_BASE_URL:', API_BASE_URL);
+}
 
 interface User {
   id: string;
@@ -90,6 +97,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const url = API_BASE_URL ? `${API_BASE_URL}/api/auth/login` : '/api/auth/login';
+      console.log('Login URL being called:', url);
+      console.log('API_BASE_URL:', API_BASE_URL);
+      
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -97,6 +107,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
         body: JSON.stringify({ email, password }),
       });
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Login failed');
