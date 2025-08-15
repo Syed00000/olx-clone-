@@ -1,8 +1,8 @@
 // Updated Vercel API handler for OLX Clone backend with authentication
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcryptjs';
+import * as jwt from 'jsonwebtoken';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://syedimranh59:Syed%401234@cluster0.dmgn230.mongodb.net/olx-clone?retryWrites=true&w=majority';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
@@ -25,25 +25,68 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // Middleware to verify JWT token
-const authenticateToken = (token: string) => {
+const authenticateToken = async (token: string) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
-    return { success: true, decoded };
+    
+    // Make sure we're connected to the database
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(MONGODB_URI);
+    }
+    
+    // Find user in database
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return { success: false, error: 'User not found' };
+    }
+    
+    return { success: true, user, decoded };
   } catch (error) {
     return { success: false, error };
   }
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Handle CORS
+  res.setHeader('Access-Control-Allow-Origin', 'https://frontend-chi-steel-16.vercel.app');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  // Log request for debugging
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  
   // Parse the URL to get just the pathname
-  const url = new URL(req.url || '/', `http://${req.headers.host}`);
-  const pathname = url.pathname;
+  let pathname = '/';
+  try {
+    const url = new URL(req.url || '/', `http://${req.headers.host}`);
+    pathname = url.pathname;
+  } catch (error) {
+    console.error('URL parsing error:', error);
+    pathname = req.url || '/';
+  }
+  
+  console.log('Pathname:', pathname);
   
   // Health check endpoint
   if (req.method === 'GET' && pathname === '/health') {
     return res.status(200).json({ 
       status: 'OK', 
       message: 'Vercel API handler is working',
+      timestamp: new Date().toISOString() 
+    });
+  }
+  
+  // Test endpoint for debugging
+  if (req.method === 'GET' && pathname === '/test') {
+    return res.status(200).json({ 
+      message: 'Backend is working correctly',
+      method: req.method,
+      pathname: pathname,
       timestamp: new Date().toISOString() 
     });
   }
@@ -62,17 +105,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Auth login endpoint
   if (req.method === 'POST' && pathname === '/api/auth/login') {
     try {
+      console.log('Login request body:', req.body);
       const { email, password } = req.body;
+      
+      // Validate input
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required' });
+      }
       
       // Find user by email
       const user = await User.findOne({ email });
       if (!user) {
+        console.log('User not found for email:', email);
         return res.status(401).json({ message: 'Invalid email or password' });
       }
 
+      console.log('User found:', user.email);
+      
       // Check password
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
+        console.log('Invalid password for user:', email);
         return res.status(401).json({ message: 'Invalid email or password' });
       }
 
@@ -100,6 +153,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST' && pathname === '/api/auth/register') {
     try {
       const { username, email, password, phone, location } = req.body;
+      
+      // Validate input
+      if (!username || !email || !password) {
+        return res.status(400).json({ 
+          message: 'Username, email, and password are required' 
+        });
+      }
       
       // Check if user already exists
       const existingUser = await User.findOne({ 
@@ -153,28 +213,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const authHeader = req.headers.authorization;
       const token = authHeader && authHeader.split(' ')[1];
       
+      console.log('Auth header:', authHeader);
+      console.log('Token:', token);
+      
       if (!token) {
         return res.status(401).json({ message: 'Access token required' });
       }
       
       // Verify token
-      const verification = authenticateToken(token);
+      const verification = await authenticateToken(token);
       if (!verification.success) {
-        return res.status(403).json({ message: 'Invalid token' });
-      }
-      
-      // Find user by ID
-      const user = await User.findById(verification.decoded.userId);
-      if (!user) {
-        return res.status(401).json({ message: 'Invalid token' });
+        console.error('Token verification failed:', verification.error);
+        return res.status(403).json({ message: 'Invalid token', error: verification.error });
       }
       
       return res.status(200).json({
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        phone: user.phone,
-        location: user.location
+        id: verification.user._id,
+        username: verification.user.username,
+        email: verification.user.email,
+        phone: verification.user.phone,
+        location: verification.user.location
       });
     } catch (error: any) {
       console.error('Get user error:', error);

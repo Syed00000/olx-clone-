@@ -6,7 +6,8 @@ const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     // In browser environment
     if (import.meta.env.VITE_NODE_ENV === 'production') {
-      return import.meta.env.VITE_API_URL || '';
+      // Use the deployed backend URL for production
+      return 'https://olxbackend-black.vercel.app';
     }
     // Development environment - use relative URLs with proxy
     return '';
