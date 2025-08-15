@@ -3,7 +3,7 @@ import { type Request, Response } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import connectDB from "./database";
-import { User, Listing, Message, Category } from "./shared/mongodb-schema";
+import { User, Listing, Message, Category } from "@shared/mongodb-schema";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 import * as path from "path";
