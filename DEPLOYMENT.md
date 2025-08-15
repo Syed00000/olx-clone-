@@ -1,47 +1,106 @@
 # Deployment Guide - OLX Clone
 
-## 🚀 Vercel Deployment
+## 🚀 Backend Deployment Guide
 
-### Frontend Deployment (Vercel)
+### Option 1: Railway (Recommended)
 
-1. **Prepare Frontend for Deployment**
-   ```bash
-   cd frontend
-   npm install
-   npm run build
+1. Create an account at [Railway.app](https://railway.app/)
+2. Create a new project
+3. Connect your GitHub repository or deploy directly
+4. Configure environment variables:
+   ```
+   MONGODB_URI=mongodb+srv://your-username:your-password@cluster0.dmgn230.mongodb.net/olx-clone?retryWrites=true&w=majority
+   JWT_SECRET=your-super-secret-jwt-key-make-it-minimum-32-characters-long-and-random
+   SESSION_SECRET=your-super-secret-session-key-make-it-minimum-32-characters-long-and-random
+   NODE_ENV=production
+   PORT=5000
+   MAX_FILE_SIZE=5242880
+   ALLOWED_FILE_TYPES=image/jpeg,image/png,image/gif,image/webp
+   FRONTEND_URL=https://your-frontend-domain.vercel.app
+   ```
+5. Deploy the application
+
+### Option 2: Vercel Serverless Functions
+
+To deploy the backend on Vercel as serverless functions:
+
+1. Create a new directory for API routes in your frontend project: `frontend/api`
+2. Create individual API route files for each endpoint (e.g., `api/auth.ts`, `api/listings.ts`)
+3. Restructure the backend code to work with Vercel's serverless function format
+4. Deploy using Vercel CLI or through the Vercel dashboard
+
+### Option 3: Render
+
+1. Create an account at [Render](https://render.com/)
+2. Create a new Web Service
+3. Connect your repository
+4. Set build command: `npm run build`
+5. Set start command: `npm start`
+6. Add environment variables from [.env.example](file:///C:/Users/Syed%20Imran%20Hassan/Downloads/OLXClone/OLXClone/backend/.env.example)
+7. Deploy
+
+### Option 4: Heroku (Alternative)
+
+1. Create an account at [Heroku](https://www.heroku.com/)
+2. Install Heroku CLI and login
+3. Create a new app
+4. Set environment variables:
+   ```
+   MONGODB_URI=mongodb+srv://your-username:your-password@cluster0.dmgn230.mongodb.net/olx-clone
+   JWT_SECRET=your-super-secret-jwt-key-make-it-minimum-32-characters-long-and-random
+   SESSION_SECRET=your-super-secret-session-key-make-it-minimum-32-characters-long-and-random
+   NODE_ENV=production
+   PORT=5000
+   MAX_FILE_SIZE=5242880
+   ALLOWED_FILE_TYPES=image/jpeg,image/png,image/gif,image/webp
+   FRONTEND_URL=https://your-frontend-domain.vercel.app
+   ```
+5. Deploy using Git or Docker
+
+### Option 5: Docker Container (Any Cloud Provider)
+
+1. Create a Dockerfile in the backend directory:
+   ```dockerfile
+   FROM node:18-alpine
+   WORKDIR /app
+   COPY package*.json ./
+   RUN npm ci --only=production
+   COPY . .
+   CMD ["node", "dist/index.js"]
    ```
 
-2. **Vercel Configuration**
-   Create `vercel.json` in the frontend directory:
-   ```json
-   {
-     "name": "olx-clone-frontend",
-     "version": 2,
-     "builds": [
-       {
-         "src": "dist/**/*",
-         "use": "@vercel/static"
-       }
-     ],
-     "routes": [
-       {
-         "src": "/assets/(.*)",
-         "dest": "/assets/$1"
-       },
-       {
-         "src": "/(.*)",
-         "dest": "/index.html"
-       }
-     ]
-   }
+2. Build and push the Docker image to your container registry
+3. Deploy on your preferred cloud provider (AWS ECS, GCP Cloud Run, Azure Container Instances)
+
+## 🖥️ Frontend Deployment Guide
+
+The frontend is already deployed on Vercel at: https://frontend-chi-steel-16.vercel.app/
+
+After deploying the backend, you'll need to:
+
+1. Update the [frontend/.env.production](file:///C:/Users/Syed%20Imran%20Hassan/Downloads/OLXClone/OLXClone/frontend/.env.production) file with your deployed backend URL:
+   ```
+   VITE_API_URL=https://your-deployed-backend-url.railway.app
    ```
 
-3. **Environment Variables for Frontend (.env)**
-   ```bash
-   VITE_API_URL=https://your-backend-api.vercel.app
-   VITE_APP_NAME=OLX Clone
-   VITE_APP_VERSION=1.0.0
-   ```
+2. Redeploy the frontend on Vercel to apply the changes
+
+## 🔐 Environment Variables Required
+
+### Backend
+- `MONGODB_URI`: Your MongoDB connection string
+- `JWT_SECRET`: A secure secret for JWT token generation (minimum 32 characters)
+- `SESSION_SECRET`: A secure secret for session management (minimum 32 characters)
+- `NODE_ENV`: Set to "production"
+- `PORT`: Server port (default: 5000)
+- `MAX_FILE_SIZE`: Maximum file upload size in bytes (default: 5242880 = 5MB)
+- `ALLOWED_FILE_TYPES`: Comma-separated list of allowed file MIME types
+- `FRONTEND_URL`: URL of your deployed frontend
+
+### Frontend
+- `VITE_API_URL`: URL of your deployed backend API
+- `VITE_APP_NAME`: Name of the application
+- `VITE_APP_VERSION`: Version of the application
 
 ### Backend Deployment (Vercel)
 

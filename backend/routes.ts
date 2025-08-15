@@ -13,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-jwt-secret-key";
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = 'uploads/';
+    const uploadDir = './backend/uploads/';
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -194,7 +194,15 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   await connectDB();
 
   // Serve uploaded images
-  app.use('/uploads', express.static('uploads'));
+  const uploadsPath = path.resolve('./backend/uploads');
+  app.use('/uploads', express.static(uploadsPath));
+  console.log('Serving uploads from:', uploadsPath);
+  
+  // Ensure uploads directory exists
+  if (!fs.existsSync('./backend/uploads')) {
+    fs.mkdirSync('./backend/uploads', { recursive: true });
+    console.log('Created uploads directory');
+  }
 
   // Initialize categories if they don't exist
   await initializeCategories();
