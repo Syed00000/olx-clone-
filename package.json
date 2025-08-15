@@ -15,7 +15,7 @@
     "dev:frontend": "cd frontend && npm run dev",
     "build": "npm run build:frontend && npm run build:backend",
     "build:frontend": "cd frontend && npm run build",
-    "build:backend": "esbuild backend/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build:backend": "esbuild backend/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --tsconfig=./tsconfig.json",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "install:all": "npm install && cd frontend && npm install",
     "check": "tsc",
