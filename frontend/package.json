@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "check": "tsc",
     "deploy:vercel": "vercel --prod",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf public"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
