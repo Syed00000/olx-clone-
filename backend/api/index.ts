@@ -11,24 +11,12 @@ const users = [
   }
 ];
 
-// Simple JWT secret
-const JWT_SECRET = 'your-jwt-secret-key';
-
-// Simple authentication function
-const authenticateToken = async (token: string) => {
-  try {
-    // For now, just return a mock user (replace with JWT verification later)
-    return { success: true, user: users[0], decoded: { userId: '1' } };
-  } catch (error) {
-    return { success: false, error };
-  }
-};
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // Handle CORS
     const allowedOrigins = [
       'https://frontend-chi-steel-16.vercel.app',
+      'https://frontend-27tpmm6y6-syed00000s-projects.vercel.app',
       'http://localhost:5173',
       'http://localhost:3000'
     ];
@@ -49,8 +37,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
     // Log request for debugging
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    console.log('Request headers:', req.headers);
-    console.log('Request body:', req.body);
     
     // Parse the URL to get just the pathname
     let pathname = '/';
