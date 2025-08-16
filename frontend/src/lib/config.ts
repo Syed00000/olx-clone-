@@ -21,12 +21,14 @@ export const config = {
   }
 };
 
-// Debug logging
+// Debug logging with timestamp
 if (typeof window !== 'undefined') {
   console.log('Environment Configuration:', {
     hostname: window.location.hostname,
     apiBaseUrl: config.api.baseUrl,
     isDevelopment: config.env.isDevelopment,
     isProduction: config.env.isProduction,
+    timestamp: new Date().toISOString(),
+    version: '1.1.0' // Force cache busting
   });
 }
