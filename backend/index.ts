@@ -9,6 +9,7 @@ const allowedOrigins = [
   'http://localhost:5173', 
   'http://localhost:3000',
   'https://frontend-chi-steel-16.vercel.app',
+  'https://olxbackend-black.vercel.app',
   // Add your deployed backend URL when you have it
 ];
 

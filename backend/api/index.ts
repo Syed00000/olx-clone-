@@ -1,5 +1,23 @@
 // Simple Vercel API handler for OLX Clone backend
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import mongoose from 'mongoose';
+
+// MongoDB connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://syedimranh59:Syed%401234@cluster0.dmgn230.mongodb.net/olx-clone?retryWrites=true&w=majority';
+
+async function connectDB() {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      return mongoose.connection;
+    }
+    await mongoose.connect(MONGODB_URI);
+    console.log('Connected to MongoDB successfully');
+    return mongoose.connection;
+  } catch (error) {
+    console.error('Failed to connect to MongoDB:', error);
+    throw error;
+  }
+}
 
 // Simple in-memory user storage for testing (replace with MongoDB later)
 const users = [
@@ -25,15 +43,30 @@ const authenticateToken = async (token: string) => {
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Handle CORS
-  res.setHeader('Access-Control-Allow-Origin', 'https://frontend-chi-steel-16.vercel.app');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Handle preflight OPTIONS request
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  try {
+    // Connect to MongoDB
+    await connectDB();
+    
+    // Handle CORS
+    const allowedOrigins = [
+      'https://frontend-chi-steel-16.vercel.app',
+      'http://localhost:5173',
+      'http://localhost:3000'
+    ];
+    
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    
+    // Handle preflight OPTIONS request
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
   
   // Log request for debugging
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -57,7 +90,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ 
       status: 'OK', 
       message: 'Vercel API handler is working',
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString(),
+      mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+      cors: 'enabled',
+      allowedOrigins: allowedOrigins
     });
   }
   
@@ -67,7 +103,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: 'Backend is working correctly',
       method: req.method,
       pathname: pathname,
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString(),
+      mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
     });
   }
   
@@ -248,4 +285,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'GET /test'
     ]
   });
+  } catch (error: any) {
+    console.error('Handler error:', error);
+    return res.status(500).json({ 
+      message: 'Internal server error', 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
 }
