@@ -4,7 +4,7 @@ export const config = {
   // API Configuration
   api: {
     baseUrl: typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
-      ? 'https://olxbackend-black.vercel.app' 
+      ? 'https://olxbackend-ah5zrdsil-syed00000s-projects.vercel.app' 
       : '',
     timeout: 10000,
   },
@@ -30,6 +30,6 @@ if (typeof window !== 'undefined') {
     isDevelopment: config.env.isDevelopment,
     isProduction: config.env.isProduction,
     timestamp: new Date().toISOString(),
-    version: '1.2.0' // Force cache busting
+    version: '1.3.0' // Force cache busting
   });
 }
