@@ -144,9 +144,7 @@ npm install
 ```
 
 3. **Environment Setup**
-```bash
-# MongoDB connection is already configured in server/database.ts
-# MongoDB URI: mongodb+srv://syedimranh59:Syed%401234@cluster0.dmgn230.mongodb.net/
+
 ```
 
 4. **Run the application**
