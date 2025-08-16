@@ -1,4 +1,5 @@
 // Environment configuration
+// FORCE DEPLOYMENT - Updated at: 2024-12-19
 export const config = {
   // API Configuration
   api: {
@@ -29,6 +30,6 @@ if (typeof window !== 'undefined') {
     isDevelopment: config.env.isDevelopment,
     isProduction: config.env.isProduction,
     timestamp: new Date().toISOString(),
-    version: '1.1.0' // Force cache busting
+    version: '1.2.0' // Force cache busting
   });
 }
